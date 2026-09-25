@@ -99,7 +99,8 @@ curl -X POST https://myte-log-api.mason-kevinc.workers.dev/api/admin/create-user
 | Cloud KV data sync + offline cache | Done |
 | UI redesign (Apple-style light theme) | Done - v3 |
 | UX improvements | Done - v3 |
-| V4 enhancements | Done - see queue below for remaining items |
+| V4 enhancements | Done |
+| V5 skin + bug-fix pass | Done - see V5 section |
 
 ---
 
@@ -110,7 +111,7 @@ curl -X POST https://myte-log-api.mason-kevinc.workers.dev/api/admin/create-user
 - **Use Python `str.replace()` for any edit touching a line with emoji or JS unicode escapes** (`\uXXXX`) — the Edit tool corrupts these
 - Never use `window.open()` — PWA standalone mode has no way to close new windows
 - Never call Google Maps via `fetch()` directly — CORS blocks it; all Maps calls go through Worker proxy (`apiFetch('/api/maps/...', 'POST', body)`)
-- Receipts stored as base64 in localStorage — intentional, no server upload needed
+- Receipts stored as compressed base64 JPEG in localStorage + KV — intentional, no server upload needed
 - `apiFetch(path, method='GET', body=null, rawBody=false)` — authenticated fetch wrapper used for all API calls
 
 ---
@@ -138,16 +139,30 @@ invoiceDefaults: { incTime, incMileage, incExpenses }   // all bool
 
 ---
 
-## V4 queue — remaining items
+## V5 (Sep 2026) — skin + bug-fix pass
 
-### Invoice preview fixes (medium priority)
-Multiple small fixes needed in `buildInvoiceHTML()`:
-- Remove the "Period:" line from top-right meta (invLabel already shown in billing period bar)
-- Address lines (From/To) show literal `\n` instead of line breaks — fix `.join('\\n')` to use actual newline character
-- Invoice From missing suburb — verify addressLine2 join logic with autocomplete data
-- Hide section header + subtotal row when only one entry type is included (e.g. Time only → no "Time" header or subtotal row)
+### Skin
+- Light = iOS-native "skin A"; dark = "Midnight Blue", automatic via `prefers-color-scheme` (tokens on `:root`, dark overrides in one `@media` block — add colours as tokens, never hard-code `#FFFFFF`).
+- Bottom tab bar, large page title in header (sync dot + this-month total underneath), segmented Trip/Expense/Time switch, sticky Save button.
+- UI icons are an inline SVG sprite at the top of `<body>` (`<symbol id="i-…">`); use `icon('name')` in JS. Emoji remain only for user-chosen destination icons.
+- `--mono` now maps to the normal font with `tabular-nums`; `--code` is the real monospace (report preview).
 
----
+### Behaviour changes / fixes
+- Dates: always use `localISO(date)` — never `toISOString()` (UTC = wrong day in NZ).
+- Time entries store a snapshot `rates`, `typeNames`, `fixed` (per typeId); use `timeTypeInfo(e, tid)` for name/rate/fixed. `migrateEntries()` backfills snapshots and fixes the old 31 Aug–29 Sep default-period bug (flag `tzFixed`).
+- Sync: `save()` sets a per-user `dirty` flag; `syncFromCloud()` pushes local instead of pulling while dirty; flush on app hide, pull on app show; 401 → `handleAuthExpired()` (sign-in screen, local data kept).
+- Receipts compressed to ≤1600px JPEG (`compressDataUrl`); old large ones recompressed on load. `saveLocal()` catches quota errors.
+- Editing: `showTab()` is the only tab switcher; leaving Add or switching type cancels an edit; banner has Cancel; Save reads "Update …"; after update → History. Edit keeps receipts and a trip's original `rateUsed`.
+- Periods: `periodRange(kind, offset)` + ‹ › nav on Summary and Invoice.
+- Invoice: stats respect include toggles; billing period bar printed; section headers only when >1 section; Generate PDF records `lastInvoiceNumber` without burning numbers; defaults auto-save.
+- Report/CSV include time entries; CSV properly escaped. Mileage km = total metres rounded to 0.1 km; "Return to start" button.
+- Deletes confirm; user text escaped with `esc()`; SW ignores API/non-GET; manifest renamed MyTE with icons.
+
+### Not done yet (ideas)
+- Link entries to clients; record issued invoices / mark entries invoiced.
+- Ad-hoc trip address and manual km override; one-tap repeat of recent trips.
+- Edit in a bottom sheet; per-session time logging; two-tier IRD km rate.
+- True multi-device merge (still last-writer-wins per blob, mitigated by pull-on-resume).
 
 ## V4 completed (for reference)
 
