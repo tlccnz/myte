@@ -133,7 +133,7 @@
     /* ── STICKY SAVE ── */
     .save-bar { position: sticky; bottom: -20px; padding: 12px 0 20px; margin-bottom: -20px; background: linear-gradient(to bottom, transparent, var(--bg) 35%); z-index: 5; }
     /* ── BIG AMOUNT ── */
-    #exp-amount { font-size: 34px; font-weight: 700; text-align: center; padding: 10px 14px; letter-spacing: -0.5px; }
+    
 
     /* ── TRIP BUILDER ── */
     .trip-purpose-select select { font-size: 15px; font-weight: 600; }
@@ -384,6 +384,96 @@
     .sync-bar.syncing .sync-dot { background: var(--amber); animation: pulse 1s infinite; }
     .sync-bar.offline .sync-dot { background: var(--text3); }
     .sync-bar.error   .sync-dot { background: var(--red); }
+
+    /* ═══ V5.1 GROUPED LAYOUT (iOS-style inset groups, label left / value right) ═══ */
+    .card { padding: 0 16px; margin: 32px 0 14px; position: relative; border: none; box-shadow: none; }
+    .card:not(:has(> .card-title)) { margin-top: 12px; }
+    .card-title { position: absolute; top: -22px; left: 16px; right: 16px; margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.4px; color: var(--text3); }
+    .card-hint, .card > p { font-size: 13px !important; color: var(--text3) !important; line-height: 1.5 !important; padding: 12px 0 0; margin: 0 0 4px !important; }
+    .card .row { display: block; }
+    .card .field { display: flex; flex-wrap: wrap; flex-direction: row !important; align-items: center !important; gap: 0 12px !important;
+      margin: 0; min-height: 48px; border-bottom: 1px solid var(--border); }
+    .card .field:last-child, .card .row:last-child .field:last-child { border-bottom: none; }
+    .card .row:not(:last-child) .field:last-child { border-bottom: 1px solid var(--border); }
+    .card .field > label { flex: 0 0 auto; margin: 0; font-size: 16px; font-weight: 400; color: var(--text); max-width: 55%; }
+    .card .field > input, .card .field > select, .card .field > .autocomplete-wrap, .card .field > textarea { flex: 1 1 0; min-width: 0; }
+    .card .field input:not([type="checkbox"]), .card .field select, .card .field textarea {
+      border: none; background-color: transparent; box-shadow: none !important; border-radius: 0;
+      padding: 13px 0; font-size: 16px; color: var(--text); text-align: right; }
+    .card .field select { text-align-last: right; padding-right: 20px; background-position: right 2px center; }
+    .card .field textarea { text-align: left; height: auto; min-height: 48px; }
+    .card .field input[type="date"] { flex: 0 1 auto; margin-left: auto; width: auto; }
+    .card .field input::placeholder { color: var(--text3); }
+    .card .field > input[type="checkbox"] { flex: 0 0 auto; margin-left: auto !important; }
+    .card .field > label { font-size: 16px !important; }
+    .list-editor + .card { margin-top: 36px !important; }
+    #cat-breakdown { padding: 14px 0 6px; }
+    .stat-value, .stat-value.green, .stat-value.amber, .stat-value.blue { color: var(--text); }
+    #sum-total, #inv-total { color: var(--accent) !important; }
+    #settings-home .list-item-name { font-weight: 400; font-size: 16px; }
+    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+    #time-total-hours, #time-total-earnings { color: var(--text) !important; font-size: 17px !important; }
+    .card .field > [id$="-verified"] { flex-basis: 100%; text-align: right; min-height: 0 !important; margin: -6px 0 8px !important; }
+    .card .field > [id$="-verified"]:empty { display: none; }
+    .card .field > .btn { flex: 1; margin: 10px 0; }
+    .card .field:has(.export-preview) { display: block; padding: 12px 0; }
+    .card .field .card-title { position: static; margin-bottom: 8px; }
+    .card > .btn, .card > div[style*="display:flex"]:has(> .btn) { margin: 12px 0 !important; }
+    .card > textarea { border: none; background: transparent; box-shadow: none !important; padding: 13px 0; }
+    .card .autocomplete-wrap input { text-align: right; }
+    .settings-section-title { font-size: 12px; font-weight: 500; letter-spacing: 0.4px; margin: 0 0 6px; padding-left: 16px; }
+    .settings-section-title + .card { margin-top: 0; }
+    .settings-section-title + .list-editor { margin-top: 0; }
+    .list-editor { border: none; }
+
+    /* Expense: big amount + chips + receipt row */
+    .amount-hero { text-align: center; padding: 4px 0 6px; }
+    .amount-hero label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin: 0; }
+    .amount-wrap { display: flex; justify-content: center; align-items: baseline; gap: 2px; }
+    .amount-wrap span { font-size: 28px; font-weight: 600; color: var(--text3); }
+    #exp-amount { width: 6ch; font-size: 48px; font-weight: 700; letter-spacing: -1.5px; text-align: left; border: none; background: transparent; box-shadow: none !important; padding: 0; color: var(--text); -moz-appearance: textfield; }
+    #exp-amount::-webkit-outer-spin-button, #exp-amount::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    #expense-form > .cat-grid { margin: 0 0 12px; }
+    .cat-pill { background: var(--surface); }
+    .receipt-drop { border: none; background: transparent; display: flex; align-items: center; gap: 10px; padding: 14px 0; text-align: left; border-radius: 0; }
+    .receipt-icon { margin: 0; } .receipt-icon .i { width: 20px; height: 20px; }
+    .receipt-text { color: var(--accent); font-size: 16px; font-weight: 500; }
+    .receipt-preview { margin: 0 0 12px; } .receipt-preview:empty { display: none; }
+
+    /* Trip builder */
+    .stop-ribbon { padding: 10px 0; min-height: 0; }
+    .dest-grid { margin: 0 0 14px; }
+    .dest-btn { border: none; background: var(--surface2); display: flex; align-items: center; gap: 8px; text-align: left; padding: 12px; font-weight: 500; font-size: 15px; }
+    .dest-btn .dest-icon { display: inline; margin: 0; font-size: 18px; }
+    .distance-bar { border: none; border-radius: var(--radius); padding: 16px; margin: 12px 0; }
+    .distance-bar.ready, .distance-bar.calculating { border: none; }
+    .distance-bar.error .dist-status { color: var(--red); }
+
+    /* Time rows */
+    #time-type-rows > div { margin: 0 !important; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    #time-type-rows input[type="number"] { border: none; background: var(--surface2); border-radius: 8px; box-shadow: none !important; }
+    #time-type-rows + div { border-top: none !important; margin: 0 !important; padding: 12px 0 14px !important; }
+
+    /* Toggles → iOS switches */
+    .card > div:has(> .inv-toggle-row), .card > div:has(> div > .inv-toggle-row) { gap: 0 !important; }
+    .card .inv-toggle-row, .card .inv-toggle-row[data-on="true"] { border: none; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; padding: 12px 0; justify-content: space-between; font-size: 16px; font-weight: 400; }
+    .card > div > .inv-toggle-row:last-child, .card > div > div:last-child > .inv-toggle-row { border-bottom: none; }
+    .inv-toggle-dot { order: 2; width: 50px; height: 30px; border-radius: 15px; border: none !important; background: var(--seg) !important; position: relative; box-shadow: none !important; }
+    .inv-toggle-dot::after, .inv-toggle-row[data-on="true"] .inv-toggle-dot::after { content: '' !important; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: left 0.18s; }
+    .inv-toggle-row[data-on="true"] .inv-toggle-dot { background: var(--green) !important; }
+    .inv-toggle-row[data-on="true"] .inv-toggle-dot::after { left: 22px; }
+    #inv-pay-custom-text { margin: 0 0 12px !important; border: none !important; background: var(--surface2); }
+
+    /* History: one inset group per day */
+    .entry-list { gap: 0; background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+    .entry { border: none; border-radius: 0; border-bottom: 1px solid var(--border); }
+    .entry:last-child { border-bottom: none; }
+    .date-label { font-weight: 500; letter-spacing: 0.4px; font-size: 12px; padding: 14px 16px 6px; }
+
+    /* Summary / invoice tiles */
+    .stat-box { border: none; }
+    .export-preview { border: none; }
   </style>
 </head>
 <body>
@@ -483,7 +573,6 @@
 
         <!-- Date + Purpose (side by side) -->
         <div class="card">
-          <div class="card-title">Trip Details</div>
           <div class="row">
             <div class="field">
               <label>Date</label>
@@ -501,7 +590,7 @@
         <!-- Stop builder -->
         <div class="card">
           <div class="card-title">Build Your Route</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">Tap stops in order to build your trip. Tap a stop in the route to remove it.</p>
+          <p class="card-hint">Tap stops in order. Tap a stop in the route to remove it.</p>
           <!-- Route ribbon -->
           <div class="stop-ribbon" id="stop-ribbon">
             <span class="stop-empty">No stops yet — tap below to start</span>
@@ -528,8 +617,7 @@
 
         <!-- Notes -->
         <div class="card">
-          <div class="card-title">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></div>
-          <textarea id="mile-notes" placeholder="Any extra details…"></textarea>
+          <div class="field"><label>Notes</label><input type="text" id="mile-notes" placeholder="Optional" /></div>
         </div>
 
         <div class="save-bar"><button class="btn btn-primary" id="save-mileage-btn" onclick="saveMileage()">Save trip</button></div>
@@ -537,12 +625,11 @@
 
       <!-- ── EXPENSE FORM ── -->
       <div id="expense-form" style="display:none">
+        <div class="amount-hero">
+          <label for="exp-amount">Amount</label>
+          <div class="amount-wrap"><span>$</span><input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" /></div>
+        </div>
         <div class="card">
-          <div class="card-title">Expense Details</div>
-          <div class="field">
-            <label>Amount ($)</label>
-            <input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
-          </div>
           <div class="field">
             <label>Date</label>
             <input type="date" id="exp-date" />
@@ -552,29 +639,23 @@
             <input type="text" id="exp-description" placeholder="e.g. Lunch with client" />
           </div>
           <div class="field">
-            <label>Category</label>
-            <div class="cat-grid" id="cat-grid">
-              <div class="cat-pill selected" data-cat="Meals" onclick="selectCat(this)"><div class="cat-pill-label">Meals</div></div>
-              <div class="cat-pill" data-cat="Parking" onclick="selectCat(this)"><div class="cat-pill-label">Parking</div></div>
-              <div class="cat-pill" data-cat="Fuel" onclick="selectCat(this)"><div class="cat-pill-label">Fuel</div></div>
-              <div class="cat-pill" data-cat="Hotel" onclick="selectCat(this)"><div class="cat-pill-label">Hotel</div></div>
-              <div class="cat-pill" data-cat="Supplies" onclick="selectCat(this)"><div class="cat-pill-label">Supplies</div></div>
-              <div class="cat-pill" data-cat="Other" onclick="selectCat(this)"><div class="cat-pill-label">Other</div></div>
-            </div>
-          </div>
-          <div class="field">
-            <label>Notes (optional)</label>
-            <textarea id="exp-notes" placeholder="Any extra details…"></textarea>
+            <label>Notes</label>
+            <input type="text" id="exp-notes" placeholder="Optional" />
           </div>
         </div>
-
+        <div class="cat-grid" id="cat-grid">
+          <div class="cat-pill selected" data-cat="Meals" onclick="selectCat(this)"><div class="cat-pill-label">Meals</div></div>
+          <div class="cat-pill" data-cat="Parking" onclick="selectCat(this)"><div class="cat-pill-label">Parking</div></div>
+          <div class="cat-pill" data-cat="Fuel" onclick="selectCat(this)"><div class="cat-pill-label">Fuel</div></div>
+          <div class="cat-pill" data-cat="Hotel" onclick="selectCat(this)"><div class="cat-pill-label">Hotel</div></div>
+          <div class="cat-pill" data-cat="Supplies" onclick="selectCat(this)"><div class="cat-pill-label">Supplies</div></div>
+          <div class="cat-pill" data-cat="Other" onclick="selectCat(this)"><div class="cat-pill-label">Other</div></div>
+        </div>
         <div class="card">
-          <div class="card-title">Receipt Photos</div>
           <div class="receipt-drop">
             <input type="file" id="receipt-input" accept="image/*" capture="environment" multiple onchange="handleReceipts(event)" />
             <div class="receipt-icon"><svg class="i"><use href="#i-camera"/></svg></div>
-            <div class="receipt-text">Tap to take photo or upload</div>
-            <div class="receipt-sub">Photos are shrunk and saved with your entries</div>
+            <div class="receipt-text">Add receipt photo</div>
           </div>
           <div class="receipt-preview" id="receipt-preview"></div>
         </div>
@@ -588,14 +669,14 @@
 
         <div class="card">
           <div class="card-title">Billing Period</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6">Select the start and end dates this timesheet covers. Hours are not tied to specific days.</p>
+          
           <div class="row">
             <div class="field">
-              <label>Period Start</label>
+              <label>Start</label>
               <input type="date" id="time-period-start" />
             </div>
             <div class="field">
-              <label>Period End</label>
+              <label>End</label>
               <input type="date" id="time-period-end" />
             </div>
           </div>
@@ -603,7 +684,7 @@
 
         <div class="card">
           <div class="card-title">Log Hours</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6">Add hours for each type of work in this period.</p>
+          
           <div id="time-type-rows"><!-- populated by JS --></div>
           <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
             <div style="display:flex;justify-content:space-between;align-items:center">
@@ -618,8 +699,7 @@
         </div>
 
         <div class="card">
-          <div class="card-title">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></div>
-          <textarea id="time-notes" placeholder="Any notes for this timesheet period…"></textarea>
+          <div class="field"><label>Notes</label><input type="text" id="time-notes" placeholder="Optional" /></div>
         </div>
 
         <div class="save-bar"><button class="btn btn-primary" id="save-time-btn" onclick="saveTimeEntry()">Save timesheet</button></div>
@@ -836,7 +916,7 @@
         <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
         <div class="settings-section-title">Your Details</div>
         <div class="card">
-          <div class="field"><label>Your Name / Business Name</label><input type="text" id="setting-biz-name" placeholder="Jane Smith" /></div>
+          <div class="field"><label>Name</label><input type="text" id="setting-biz-name" placeholder="Jane Smith" /></div>
           <div class="field"><label>Address Line 1</label>
             <div class="autocomplete-wrap">
               <input type="text" id="setting-biz-addr1" placeholder="123 Main St" autocomplete="off" oninput="onAddressInput(this,'biz-addr1-ac')" onblur="delayHide('biz-addr1-ac')" />
@@ -867,7 +947,7 @@
         <div class="settings-section-title" style="margin-top:16px">Mileage Rate</div>
         <div class="card">
           <div class="field">
-            <label>Rate per km ($) — NZ IRD rate</label>
+            <label>Rate per km ($)</label>
             <input type="number" id="setting-rate" step="0.001" min="0" placeholder="0.000" />
           </div>
           <button class="btn btn-ghost" onclick="saveRate()" style="margin-top:8px">Save Rate</button>
@@ -924,7 +1004,7 @@
         <div class="card" style="margin-top:8px">
           <div class="card-title">Add / Edit Client</div>
           <input type="hidden" id="edit-client-id" />
-          <div class="field"><label>Client Name / Organisation</label><input type="text" id="setting-client-name" placeholder="ABC Company Ltd" /></div>
+          <div class="field"><label>Name</label><input type="text" id="setting-client-name" placeholder="ABC Company Ltd" /></div>
           <div class="field"><label>Address Line 1</label>
             <div class="autocomplete-wrap">
               <input type="text" id="setting-client-addr1" placeholder="456 Business Ave" autocomplete="off" oninput="onAddressInput(this,'client-addr1-ac')" onblur="delayHide('client-addr1-ac')" />
@@ -1224,6 +1304,7 @@ function refreshAll() {
 function showTab(name) {
   const cur = document.querySelector('.tab.active')?.dataset.tab;
   if (cur === 'add' && name !== 'add' && editingEntryId) cancelEdit();
+  if (cur === 'settings' && name === 'settings') showSettingsHome(); // tapping the active tab pops to its root
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
