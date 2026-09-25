@@ -25,6 +25,7 @@
       --seg: rgba(118,118,128,0.12);
       --seg-on: #FFFFFF;
       --tabbar: rgba(249,249,249,0.94);
+      --switch-off: rgba(120,120,128,0.22);
       --border: rgba(0,0,0,0.08);
       --border2: rgba(0,0,0,0.12);
       --text: #000000;
@@ -56,7 +57,7 @@
       :root {
         --bg: #000000; --bg2: #1C1C1E; --bg3: #2C2C2E;
         --surface: #1C1C1E; --surface2: #2C2C2E; --input-bg: #2C2C2E;
-        --seg: #1C1C1E; --seg-on: #3A3A3C; --tabbar: rgba(22,22,24,0.94);
+        --seg: #1C1C1E; --seg-on: #3A3A3C; --switch-off: #39393D; --tabbar: rgba(22,22,24,0.94);
         --border: rgba(84,84,88,0.40); --border2: rgba(84,84,88,0.65);
         --text: #FFFFFF; --text2: #D1D1D6; --text3: #8E8E93;
         --accent: #0A84FF; --accent2: #409CFF; --accent-dim: rgba(10,132,255,0.20);
@@ -404,16 +405,23 @@
     .card .field textarea { text-align: left; height: auto; min-height: 48px; }
     .card .field input[type="date"] { flex: 0 1 auto; margin-left: auto; width: auto; }
     .card .field input::placeholder { color: var(--text3); }
-    .card .field > input[type="checkbox"] { flex: 0 0 auto; margin-left: auto !important; }
+    .card .field > input[type="checkbox"], input.switch {
+      -webkit-appearance: none !important; appearance: none !important; flex: 0 0 auto; margin: 0 0 0 auto !important;
+      width: 50px !important; height: 30px !important; border-radius: 15px; background: var(--switch-off); position: relative; cursor: pointer; border: none; transition: background 0.18s; }
+    .card .field > input[type="checkbox"]::before, input.switch::before {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: left 0.18s; }
+    .card .field > input[type="checkbox"]:checked, input.switch:checked { background: var(--green); }
+    .card .field > input[type="checkbox"]:checked::before, input.switch:checked::before { left: 22px; }
     .card .field > label { font-size: 16px !important; }
     .list-editor + .card { margin-top: 36px !important; }
+    .list-editor + .card:not(:has(> .card-title)) { margin-top: 12px !important; }
     #cat-breakdown { padding: 14px 0 6px; }
     .stat-value, .stat-value.green, .stat-value.amber, .stat-value.blue { color: var(--text); }
     #sum-total, #inv-total { color: var(--accent) !important; }
     #settings-home .list-item-name { font-weight: 400; font-size: 16px; }
     input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
-    #time-total-hours, #time-total-earnings { color: var(--text) !important; font-size: 17px !important; }
+
     .card .field > [id$="-verified"] { flex-basis: 100%; text-align: right; min-height: 0 !important; margin: -6px 0 8px !important; }
     .card .field > [id$="-verified"]:empty { display: none; }
     .card .field > .btn { flex: 1; margin: 10px 0; }
@@ -426,13 +434,31 @@
     .settings-section-title + .card { margin-top: 0; }
     .settings-section-title + .list-editor { margin-top: 0; }
     .list-editor { border: none; }
+    .card .field { position: relative; }
+    .card .autocomplete-wrap { position: static; }
+    .card .autocomplete-list { left: -8px; right: -8px; top: calc(100% - 4px); text-align: left; }
+    .card > .btn:not(.btn-sm), .card .field > .btn, .card > div:has(> .btn) > .btn {
+      background: transparent !important; color: var(--accent); border: none !important; border-radius: 0; box-shadow: none;
+      margin: 0 !important; padding: 14px 0; font-size: 16px; font-weight: 600; width: 100%; }
+    .card > div:has(> .btn) { margin: 0 !important; gap: 0 !important; }
+    .card > div:has(> .btn) > .btn-sm { width: auto; color: var(--text3); font-weight: 500; padding: 14px 4px; }
+    .card > .btn + .btn { border-top: 1px solid var(--border) !important; }
+    .card.danger > .btn { color: var(--red) !important; font-weight: 500; }
+    .card .btn:active { transform: none; opacity: 0.5; }
+    .section-foot { font-size: 13px; color: var(--text3); padding: 0 16px; margin: -6px 0 16px; line-height: 1.45; }
+    .back-link { background: none; border: none; color: var(--accent); font-size: 17px; font-family: var(--font); padding: 2px 0 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; }
+    .card .field > input:only-child { text-align: left; }
+    .card .field select:invalid { color: var(--text3); }
+    .modal { background: var(--bg); }
+    .stop-ribbon:empty { display: none; }
+    .distance-bar { align-items: flex-start; }
 
     /* Expense: big amount + chips + receipt row */
     .amount-hero { text-align: center; padding: 4px 0 6px; }
     .amount-hero label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin: 0; }
     .amount-wrap { display: flex; justify-content: center; align-items: baseline; gap: 2px; }
     .amount-wrap span { font-size: 28px; font-weight: 600; color: var(--text3); }
-    #exp-amount { width: 6ch; font-size: 48px; font-weight: 700; letter-spacing: -1.5px; text-align: left; border: none; background: transparent; box-shadow: none !important; padding: 0; color: var(--text); -moz-appearance: textfield; }
+    #exp-amount { width: 3.2em; font-size: 48px; font-weight: 700; letter-spacing: -1.5px; text-align: left; border: none; background: transparent; box-shadow: none !important; padding: 0; color: var(--text); -moz-appearance: textfield; }
     #exp-amount::-webkit-outer-spin-button, #exp-amount::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     #expense-form > .cat-grid { margin: 0 0 12px; }
     .cat-pill { background: var(--surface); }
@@ -451,15 +477,19 @@
     .distance-bar.error .dist-status { color: var(--red); }
 
     /* Time rows */
-    #time-type-rows > div { margin: 0 !important; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    #time-type-rows input[type="number"] { border: none; background: var(--surface2); border-radius: 8px; box-shadow: none !important; }
-    #time-type-rows + div { border-top: none !important; margin: 0 !important; padding: 12px 0 14px !important; }
+    #time-type-rows .field:last-child { border-bottom: 1px solid var(--border); }
+    .card .field > label .sub { display: block; font-size: 13px; color: var(--text3); margin-top: 1px; }
+    .time-row > label { padding: 9px 0; }
+    .hrs-wrap { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .card .hrs-wrap input { width: 72px; }
+    .unit { color: var(--text3); font-size: 16px; }
+    .total-val { margin-left: auto; font-size: 16px; font-weight: 600; }
 
     /* Toggles → iOS switches */
     .card > div:has(> .inv-toggle-row), .card > div:has(> div > .inv-toggle-row) { gap: 0 !important; }
     .card .inv-toggle-row, .card .inv-toggle-row[data-on="true"] { border: none; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; padding: 12px 0; justify-content: space-between; font-size: 16px; font-weight: 400; }
     .card > div > .inv-toggle-row:last-child, .card > div > div:last-child > .inv-toggle-row { border-bottom: none; }
-    .inv-toggle-dot { order: 2; width: 50px; height: 30px; border-radius: 15px; border: none !important; background: var(--seg) !important; position: relative; box-shadow: none !important; }
+    .inv-toggle-dot { order: 2; width: 50px; height: 30px; border-radius: 15px; border: none !important; background: var(--switch-off) !important; position: relative; box-shadow: none !important; }
     .inv-toggle-dot::after, .inv-toggle-row[data-on="true"] .inv-toggle-dot::after { content: '' !important; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: left 0.18s; }
     .inv-toggle-row[data-on="true"] .inv-toggle-dot { background: var(--green) !important; }
     .inv-toggle-row[data-on="true"] .inv-toggle-dot::after { left: 22px; }
@@ -580,7 +610,7 @@
             </div>
             <div class="field">
               <label>Purpose</label>
-              <select id="mile-purpose">
+              <select id="mile-purpose" required>
                 <option value="">— Select —</option>
               </select>
             </div>
@@ -593,7 +623,6 @@
           <p class="card-hint">Tap stops in order. Tap a stop in the route to remove it.</p>
           <!-- Route ribbon -->
           <div class="stop-ribbon" id="stop-ribbon">
-            <span class="stop-empty">No stops yet — tap below to start</span>
           </div>
           <!-- Destination buttons -->
           <button class="btn btn-ghost btn-sm" id="return-btn" onclick="addReturnStop()" style="display:none;margin:0 0 10px"><svg class="i"><use href="#i-return"/></svg>Return to start</button>
@@ -627,7 +656,7 @@
       <div id="expense-form" style="display:none">
         <div class="amount-hero">
           <label for="exp-amount">Amount</label>
-          <div class="amount-wrap"><span>$</span><input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" /></div>
+          <div class="amount-wrap"><span>$</span><input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" oninput="sizeAmount()" onblur="formatAmount()" /></div>
         </div>
         <div class="card">
           <div class="field">
@@ -686,16 +715,8 @@
           <div class="card-title">Log Hours</div>
           
           <div id="time-type-rows"><!-- populated by JS --></div>
-          <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:13px;font-weight:700;color:var(--text2)">Total Hours</span>
-              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent2)" id="time-total-hours">0.00 hrs</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-              <span style="font-size:13px;font-weight:700;color:var(--text2)">Total Earnings</span>
-              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green)" id="time-total-earnings">$0.00</span>
-            </div>
-          </div>
+          <div class="field"><label>Total hours</label><span class="total-val" id="time-total-hours">0.00 hrs</span></div>
+          <div class="field"><label>Total earnings</label><span class="total-val" id="time-total-earnings">$0.00</span></div>
         </div>
 
         <div class="card">
@@ -738,7 +759,7 @@
 
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Total km</div><div class="stat-value blue" id="sum-miles">0</div></div>
-        <div class="stat-box"><div class="stat-label">km Reimb.</div><div class="stat-value green" id="sum-mile-reimb">$0</div></div>
+        <div class="stat-box"><div class="stat-label">Mileage</div><div class="stat-value green" id="sum-mile-reimb">$0</div></div>
         <div class="stat-box"><div class="stat-label">Expenses</div><div class="stat-value amber" id="sum-expense">$0</div></div>
         <div class="stat-box"><div class="stat-label">Total Hours</div><div class="stat-value blue" id="sum-hours">0</div></div>
         <div class="stat-box"><div class="stat-label">Time Earnings</div><div class="stat-value green" id="sum-earnings">$0</div></div>
@@ -849,7 +870,7 @@
         <div style="display:flex;flex-direction:column;gap:8px">
           <div class="inv-toggle-row" id="inv-pay-bank" onclick="toggleInvPay(this)" data-on="true">
             <div class="inv-toggle-dot"></div>
-            <span>Bank transfer (show account number)</span>
+            <span>Bank transfer details</span>
           </div>
           <div>
             <div class="inv-toggle-row" id="inv-pay-custom" onclick="toggleInvPay(this)" data-on="false">
@@ -913,7 +934,7 @@
 
       <!-- Sub-screen: Your Details -->
       <div id="settings-sub-your-details" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
         <div class="settings-section-title">Your Details</div>
         <div class="card">
           <div class="field"><label>Name</label><input type="text" id="setting-biz-name" placeholder="Jane Smith" /></div>
@@ -956,9 +977,9 @@
 
       <!-- Sub-screen: Destinations -->
       <div id="settings-sub-destinations" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
         <div class="settings-section-title">Destinations</div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6;padding-left:2px">Each destination needs a full address for Google Maps distance calculation.</p>
+        <p class="section-foot" style="margin:0 0 8px">Each destination needs a full address so the distance can be worked out.</p>
         <div class="list-editor" id="destinations-list"></div>
         <div class="card" style="margin-top:8px">
           <div class="card-title">Add Destination</div>
@@ -966,7 +987,7 @@
             <div class="field" style="flex:2"><label>Name</label><input type="text" id="new-dest-name" placeholder="e.g. Home" /></div>
             <div class="field" style="flex:1"><label>Icon</label>
               <select id="new-dest-icon">
-                <option value="">— None —</option>
+                <option value="">None</option>
                 <option value="🏢">🏢 Business</option>
                 <option value="☕">☕ Cafe</option>
                 <option value="🏠">🏠 Residence</option>
@@ -987,18 +1008,18 @@
 
       <!-- Sub-screen: Purposes -->
       <div id="settings-sub-purposes" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
         <div class="settings-section-title">Trip Purposes</div>
         <div class="list-editor" id="purposes-list"></div>
-        <div class="add-row" style="margin-top:8px">
-          <input type="text" id="new-purpose-input" placeholder="Add new purpose…" />
-          <button class="btn btn-primary btn-sm" onclick="addPurpose()">Add</button>
+        <div class="card">
+          <div class="field"><input type="text" id="new-purpose-input" placeholder="New purpose" onkeydown="if(event.key==='Enter')addPurpose()" /></div>
+          <button class="btn btn-primary" onclick="addPurpose()">Add purpose</button>
         </div>
       </div>
 
       <!-- Sub-screen: Clients -->
       <div id="settings-sub-clients" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
         <div class="settings-section-title">Clients</div>
         <div class="list-editor" id="clients-list"></div>
         <div class="card" style="margin-top:8px">
@@ -1024,7 +1045,7 @@
 
       <!-- Sub-screen: Invoice Defaults -->
       <div id="settings-sub-invoice-defaults" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
         <div class="settings-section-title">Invoice Defaults</div>
         <div class="card">
           <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">Choose which line items are included by default when creating an invoice.</p>
@@ -1048,16 +1069,13 @@
 
       <!-- Sub-screen: Advanced -->
       <div id="settings-sub-advanced" style="display:none">
-        <button class="btn btn-ghost btn-sm" onclick="showSettingsHome()" style="margin-bottom:12px;width:auto">← Back</button>
-        <div class="settings-section-title">Advanced</div>
-
-        <div class="card" style="margin-top:8px;border-color:var(--red-dim)">
-          <div class="card-title" style="color:var(--red)">Danger Zone</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn" style="background:var(--surface);color:var(--red);border:1.5px solid var(--red)" onclick="confirmClearTransactions()">Clear Transactions</button>
-            <button class="btn btn-danger" onclick="confirmResetEverything()">Reset Everything</button>
-          </div>
+        <button class="back-link" onclick="showSettingsHome()"><span style="font-size:24px;line-height:0.8">‹</span> Settings</button>
+        <div class="settings-section-title">Danger zone</div>
+        <div class="card danger">
+          <button class="btn" onclick="confirmClearTransactions()">Clear transactions…</button>
+          <button class="btn" onclick="confirmResetEverything()">Reset everything…</button>
         </div>
+        <p class="section-foot">Clear transactions keeps your settings, clients and rates. Reset everything returns the app to a fresh install.</p>
       </div>
 
     </div><!-- /panel-settings -->
@@ -1107,16 +1125,11 @@
 <div class="modal-overlay" id="edit-addr-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Edit Destination</div>
-    <div class="row" style="gap:10px;margin-bottom:12px">
-      <div class="field" style="flex:1">
-        <label>Name</label>
-        <input type="text" id="edit-dest-name" placeholder="e.g. Home" />
-      </div>
-      <div class="field" style="flex:0 0 auto">
-        <label>Icon</label>
-        <select id="edit-dest-icon" style="font-size:20px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface)">
-          <option value="">—</option>
+    <div class="modal-title">Edit destination</div>
+    <div class="card" style="margin:0 0 14px">
+      <div class="field"><label>Name</label><input type="text" id="edit-dest-name" placeholder="e.g. Home" /></div>
+      <div class="field"><label>Icon</label><select id="edit-dest-icon">
+          <option value="">None</option>
           <option value="✈️">✈️ Airport</option>
           <option value="🏦">🏦 Bank</option>
           <option value="☕">☕ Café</option>
@@ -1130,18 +1143,17 @@
           <option value="🏫">🏫 School</option>
           <option value="🏪">🏪 Shop</option>
           <option value="⛽">⛽ Petrol</option>
-        </select>
+        </select></div>
+      <div class="field">
+        <label>Address</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="edit-addr-input" placeholder="Start typing an address…" autocomplete="off"
+            oninput="onAddressInput(this,'edit-addr-suggestions')"
+            onblur="delayHide('edit-addr-suggestions')" />
+          <div class="autocomplete-list" id="edit-addr-suggestions"></div>
+        </div>
+        <div id="edit-addr-verified"></div>
       </div>
-    </div>
-    <div class="field">
-      <label>Address</label>
-      <div class="autocomplete-wrap">
-        <input type="text" id="edit-addr-input" placeholder="Start typing an address…" autocomplete="off"
-          oninput="onAddressInput(this,'edit-addr-suggestions')"
-          onblur="delayHide('edit-addr-suggestions')" />
-        <div class="autocomplete-list" id="edit-addr-suggestions"></div>
-      </div>
-      <div id="edit-addr-verified" style="margin-top:6px"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('edit-addr-modal')">Cancel</button>
@@ -1597,6 +1609,7 @@ function setType(t) {
   document.getElementById('type-expense').className  = 'type-btn' + (t==='expense'  ? ' active' : '');
   document.getElementById('type-time').className     = 'type-btn' + (t==='time'     ? ' active' : '');
   if (t === 'time' && !editingEntryId) renderTimeTypeRows();
+  if (t === 'expense') sizeAmount();
 }
 // User tapped the Trip/Expense/Time switch. Switching type while editing ends the edit.
 function chooseType(t) {
@@ -1616,7 +1629,7 @@ function populatePurposeSelect() {
     if ((b.usageCount || 0) !== (a.usageCount || 0)) return (b.usageCount || 0) - (a.usageCount || 0);
     return a.text.localeCompare(b.text);
   });
-  sel.innerHTML = '<option value="">— Select purpose —</option>' +
+  sel.innerHTML = '<option value="">Select</option>' +
     sorted.map(p => `<option value="${esc(p.text)}">${esc(p.text)}</option>`).join('');
 }
 
@@ -1683,7 +1696,7 @@ function renderRibbon() {
   const rb = document.getElementById('return-btn');
   if (rb) rb.style.display = (tripStops.length >= 2 && tripStops[tripStops.length - 1] !== tripStops[0]) ? 'inline-flex' : 'none';
   if (tripStops.length === 0) {
-    ribbon.innerHTML = '<span class="stop-empty">No stops yet — tap below to start</span>';
+    ribbon.innerHTML = '';
     return;
   }
   ribbon.innerHTML = tripStops.map((id, i) => {
@@ -1807,8 +1820,26 @@ function resetMileageForm() {
   document.getElementById('mile-purpose').value = '';
   document.getElementById('mile-notes').value = '';
 }
+// Size the big amount input to its text so "$" + number stay centred together
+function sizeAmount() {
+  const el = document.getElementById('exp-amount');
+  if (!el) return;
+  const cs = getComputedStyle(el);
+  const ctx = sizeAmount.ctx || (sizeAmount.ctx = document.createElement('canvas').getContext('2d'));
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const text = el.value || el.placeholder;
+  const ls = parseFloat(cs.letterSpacing) || 0;
+  el.style.width = Math.ceil(ctx.measureText(text).width + ls * text.length + 4) + 'px';
+}
+function formatAmount() {
+  const el = document.getElementById('exp-amount');
+  const v = parseFloat(el.value);
+  if (!isNaN(v)) el.value = v.toFixed(2);
+  sizeAmount();
+}
 function resetExpenseForm() {
   document.getElementById('exp-amount').value = '';
+  sizeAmount();
   document.getElementById('exp-description').value = '';
   document.getElementById('exp-notes').value = '';
   document.getElementById('receipt-input').value = '';
@@ -2064,7 +2095,8 @@ function editEntry(id) {
   } else if (e.type === 'expense') {
     setType('expense');
     document.getElementById('exp-date').value        = e.date || '';
-    document.getElementById('exp-amount').value      = e.amount || '';
+    document.getElementById('exp-amount').value      = e.amount != null ? Number(e.amount).toFixed(2) : '';
+    sizeAmount();
     document.getElementById('exp-description').value = e.description || '';
     document.getElementById('exp-notes').value       = e.notes || '';
     selectedCat = e.category || 'Meals';
@@ -2131,7 +2163,7 @@ function viewReceipts(id) {
   imgs.forEach(src => {
     const img = document.createElement('img');
     img.src = src;
-    img.style.cssText = 'max-width:100%;display:block;margin-bottom:10px;border-radius:8px;';
+    img.style.cssText = 'max-width:100%;display:block;margin:0 auto 12px;border-radius:8px;';
     overlay.appendChild(img);
   });
   document.body.appendChild(overlay);
@@ -2699,24 +2731,9 @@ function renderTimeTypeRows() {
   container.innerHTML = (config.timeTypes || []).map(t => {
     const rateLabel = t.fixedPrice ? fmt(t.rate) + ' fixed' : fmt(t.rate) + '/hr';
     const input = t.fixedPrice
-      ? `<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
-           <input type="checkbox" id="hrs-${t.id}" onchange="updateTimeTotals()"
-             style="width:20px;height:20px;accent-color:var(--accent);flex-shrink:0" />
-           Include
-         </label>`
-      : `<div style="display:flex;align-items:center;gap:6px">
-           <input type="number" id="hrs-${t.id}" min="0" step="0.25" placeholder="0"
-             style="width:80px;font-size:16px;text-align:right;padding:10px 10px"
-             oninput="updateTimeTotals()" />
-           <span style="font-size:12px;color:var(--text3)">hrs</span>
-         </div>`;
-    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">${esc(t.name)}</div>
-        <div style="font-size:11px;color:var(--text3)">${rateLabel}</div>
-      </div>
-      ${input}
-    </div>`;
+      ? `<input type="checkbox" class="switch" id="hrs-${t.id}" onchange="updateTimeTotals()" aria-label="Include ${esc(t.name)}" />`
+      : `<span class="hrs-wrap"><input type="number" id="hrs-${t.id}" min="0" step="0.25" placeholder="0" inputmode="decimal" oninput="updateTimeTotals()" /><span class="unit">hrs</span></span>`;
+    return `<div class="field time-row"><label for="hrs-${t.id}">${esc(t.name)}<span class="sub">${rateLabel}</span></label>${input}</div>`;
   }).join('');
   updateTimeTotals();
 }
@@ -3075,6 +3092,7 @@ function buildInvoiceHTML(forPrint) {
   .bank-box .bank-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #2d7a2d; margin-bottom: 6px; }
   .bank-box .bank-num { font-size: 20px; font-weight: 800; color: #1a1a2e; font-family: monospace; }
   .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #aaa; font-size: 11px; text-align: center; }
+  @media (max-width: 600px) { body { padding: 20px 16px; } .inv-title { font-size: 28px; } .inv-header { margin-bottom: 24px; } .inv-meta { font-size: 12px; } .parties { grid-template-columns: 1fr; gap: 16px; padding: 16px; } thead th, tbody td { padding: 8px 6px; } }
   @media print { body { padding: 20px; } @page { margin: 15mm; } }
 </style></head><body>
 
@@ -3141,14 +3159,18 @@ function showInvoiceOverlay(html, autoPrint) {
     overlay = document.createElement('div');
     overlay.id = 'invoice-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;background:white;display:flex;flex-direction:column;';
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;background:#F2F2F7;border-bottom:1px solid rgba(0,0,0,0.1);font:600 16px -apple-system,BlinkMacSystemFont,sans-serif;color:#000;flex-shrink:0;';
+    bar.innerHTML = '<span>Invoice preview</span>';
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '\u2715 Close';
-    closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;z-index:1001;background:rgba(0,0,0,0.08);border:none;border-radius:20px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;';
+    closeBtn.style.cssText = 'background:none;border:none;color:#007AFF;font:600 16px -apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer;padding:4px 0;';
     closeBtn.onclick = () => overlay.remove();
     const iframe = document.createElement('iframe');
     iframe.id = 'invoice-frame';
     iframe.style.cssText = 'flex:1;border:none;width:100%;height:100%;';
-    overlay.appendChild(closeBtn);
+    bar.appendChild(closeBtn);
+    overlay.appendChild(bar);
     overlay.appendChild(iframe);
     document.body.appendChild(overlay);
   }
