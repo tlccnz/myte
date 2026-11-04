@@ -158,6 +158,13 @@ invoiceDefaults: { incTime, incMileage, incExpenses }   // all bool
 - Report/CSV include time entries; CSV properly escaped. Mileage km = total metres rounded to 0.1 km; "Return to start" button.
 - Deletes confirm; user text escaped with `esc()`; SW ignores API/non-GET; manifest renamed MyTE with icons.
 
+### Mileage rates (Nov 2026)
+- `IRD_RATES` / `IRS_RATES` tables near the top of the script; `tripRates(km, date)` returns both amounts.
+- Trips store: `rateUsed`, `rateSource`, `rateProvisional`, `reimbursement` (NZ$, IRD) and `miles`, `irsRate`, `irsSource`, `irsProvisional`, `reimbursementUSD` (IRS).
+- IRD publishes rates after the income year (1 Apr–31 Mar) ends, usually around June: add a row to `IRD_RATES`. IRS announces in December and sometimes mid-year: add a row with its `from` date.
+- Trips after the last published IRD year use the latest rates and are flagged provisional. Recalculating provisional and legacy trips (saved before date-based rates, with no `rateSource`) is still to be decided.
+- `config.vehicleType` (petrol/diesel/hybrid/electric) picks the IRD column; `config.ratePerKm` is legacy only.
+
 ### Not done yet (ideas)
 - Link entries to clients; record issued invoices / mark entries invoiced.
 - Ad-hoc trip address and manual km override; one-tap repeat of recent trips.

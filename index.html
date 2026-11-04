@@ -452,6 +452,10 @@
     .modal { background: var(--bg); }
     .stop-ribbon:empty { display: none; }
     .distance-bar { align-items: flex-start; }
+    .reimb-usd { font-size: 12px; color: var(--text3); margin-top: 2px; white-space: nowrap; }
+    .dist-left { flex: 1; min-width: 0; padding-right: 10px; }
+    .dist-right { flex-shrink: 0; }
+    .entry-receipt-badge.prov { color: var(--amber); background: var(--amber-dim); }
 
     /* Expense: big amount + chips + receipt row */
     .amount-hero { text-align: center; padding: 4px 0 6px; }
@@ -606,7 +610,7 @@
           <div class="row">
             <div class="field">
               <label>Date</label>
-              <input type="date" id="mile-date" />
+              <input type="date" id="mile-date" onchange="showTripRates()" />
             </div>
             <div class="field">
               <label>Purpose</label>
@@ -641,6 +645,7 @@
           <div class="dist-right">
             <div class="reimb-label">Reimbursement</div>
             <div class="reimb-value dim" id="reimb-value">$—</div>
+            <div class="reimb-usd" id="reimb-usd"></div>
           </div>
         </div>
 
@@ -759,7 +764,9 @@
 
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Total km</div><div class="stat-value blue" id="sum-miles">0</div></div>
-        <div class="stat-box"><div class="stat-label">Mileage</div><div class="stat-value green" id="sum-mile-reimb">$0</div></div>
+        <div class="stat-box"><div class="stat-label">Mileage (IRD)</div><div class="stat-value green" id="sum-mile-reimb">$0</div></div>
+        <div class="stat-box"><div class="stat-label">Total miles</div><div class="stat-value" id="sum-mi">0</div></div>
+        <div class="stat-box"><div class="stat-label">Mileage (IRS)</div><div class="stat-value" id="sum-usd">US$0</div><div class="stat-label" id="sum-usd-note" style="text-transform:none;letter-spacing:0;margin-top:2px"></div></div>
         <div class="stat-box"><div class="stat-label">Expenses</div><div class="stat-value amber" id="sum-expense">$0</div></div>
         <div class="stat-box"><div class="stat-label">Total Hours</div><div class="stat-value blue" id="sum-hours">0</div></div>
         <div class="stat-box"><div class="stat-label">Time Earnings</div><div class="stat-value green" id="sum-earnings">$0</div></div>
@@ -965,14 +972,20 @@
             <div class="field" style="flex:0 0 auto"><button class="btn btn-primary" onclick="addTimeType()" style="white-space:nowrap">Add</button></div>
           </div>
         </div>
-        <div class="settings-section-title" style="margin-top:16px">Mileage Rate</div>
+        <div class="settings-section-title" style="margin-top:16px">Mileage Rates</div>
         <div class="card">
           <div class="field">
-            <label>Rate per km ($)</label>
-            <input type="number" id="setting-rate" step="0.001" min="0" placeholder="0.000" />
+            <label>Vehicle</label>
+            <select id="setting-vehicle" onchange="saveVehicle()">
+              <option value="petrol">Petrol</option><option value="diesel">Diesel</option>
+              <option value="hybrid">Petrol hybrid</option><option value="electric">Electric</option>
+            </select>
           </div>
-          <button class="btn btn-ghost" onclick="saveRate()" style="margin-top:8px">Save Rate</button>
+          <div class="field"><label>IRD today</label><span class="total-val" id="rate-ird-now" style="font-weight:400"></span></div>
+          <div class="field"><label>IRS today</label><span class="total-val" id="rate-irs-now" style="font-weight:400"></span></div>
+          <div class="field"><label>This income year</label><span class="total-val" id="rate-ytd" style="font-weight:400"></span></div>
         </div>
+        <p class="section-foot">Each trip uses the IRD and IRS rates for its date. Newer trips use the latest published rate and are marked provisional until IRD or IRS publishes the official one.</p>
       </div>
 
       <!-- Sub-screen: Destinations -->
@@ -1172,7 +1185,8 @@ const WORKER_URL = 'https://myte-log-api.mason-kevinc.workers.dev';
 //  DEFAULT CONFIG
 // ═══════════════════════════════════════════════════════════
 const DEFAULT_CONFIG = {
-  ratePerKm: 1.17,
+  ratePerKm: 1.17,          // legacy: only used for trips saved before date-based rates
+  vehicleType: 'petrol',
   purposes: [
     'Client visit','Office commute','Airport transfer',
     'Site inspection','Training / conference','Other business'
@@ -1193,6 +1207,65 @@ const DEFAULT_CONFIG = {
   clientDetails: { name:'', address:'', email:'' },
   lastInvoiceNumber: 0
 };
+
+// ═══════════════════════════════════════════════════════════
+//  MILEAGE RATE TABLES — add a row when IRD / IRS publish new rates
+// ═══════════════════════════════════════════════════════════
+// IRD: NZ income year 1 Apr – 31 Mar, NZ$ per km [tier 1, tier 2]. Published after the year ends,
+// so trips after the last row use the latest rates and are flagged provisional.
+// Source: ird.govt.nz › Claiming vehicle expenses › Kilometre rates
+const IRD_RATES = [
+  { from: '2024-04-01', to: '2025-03-31', label: 'IRD 2024–25',
+    petrol: [1.17, 0.37], diesel: [1.26, 0.35], hybrid: [0.86, 0.21], electric: [1.08, 0.19] },
+  { from: '2025-04-01', to: '2026-03-31', label: 'IRD 2025–26',
+    petrol: [1.20, 0.37], diesel: [1.30, 0.38], hybrid: [0.90, 0.24], electric: [1.22, 0.23] },
+];
+// IRS business standard mileage rate, US$ per mile, effective from date (can change mid-year).
+// Source: irs.gov newsroom (IR-2023-239, IR-2024-312, IR-2025-128, mid-year change 1 Jul 2026)
+const IRS_RATES = [
+  { from: '2024-01-01', rate: 0.67,  label: 'IRS 2024' },
+  { from: '2025-01-01', rate: 0.70,  label: 'IRS 2025' },
+  { from: '2026-01-01', rate: 0.725, label: 'IRS 2026 (Jan–Jun)' },
+  { from: '2026-07-01', rate: 0.76,  label: 'IRS 2026 (from 1 Jul)' },
+];
+const KM_TO_MI = 0.621371;
+const VEHICLE_TYPES = { petrol: 'Petrol', diesel: 'Diesel', hybrid: 'Petrol hybrid', electric: 'Electric' };
+const IRD_TIER1_KM = 14000;
+
+function irdRateFor(date, vehicle = config.vehicleType || 'petrol') {
+  let row = IRD_RATES.find(r => date >= r.from && date <= r.to);
+  let provisional = false;
+  if (!row) {
+    const last = IRD_RATES[IRD_RATES.length - 1];
+    if (date > last.to) { row = last; provisional = true; } else row = IRD_RATES[0];
+  }
+  const v = row[vehicle] || row.petrol;
+  return { rate: v[0], tier2: v[1], label: row.label, provisional };
+}
+function irsRateFor(date) {
+  const rows = IRS_RATES.filter(r => r.from <= date);
+  const row = rows[rows.length - 1] || IRS_RATES[0];
+  const provisional = date.slice(0, 4) > IRS_RATES[IRS_RATES.length - 1].from.slice(0, 4);
+  return { rate: row.rate, label: row.label, provisional };
+}
+// IRD income year label + range for a date (1 Apr – 31 Mar)
+function irdIncomeYear(date) {
+  const y = +date.slice(0, 4), m = +date.slice(5, 7);
+  const start = m >= 4 ? y : y - 1;
+  return { start: `${start}-04-01`, end: `${start + 1}-03-31`, label: `${start}–${String(start + 1).slice(2)}` };
+}
+// Both amounts for a trip of km on date
+function tripRates(km, date) {
+  const ird = irdRateFor(date), irs = irsRateFor(date);
+  const miles = Math.round(km * KM_TO_MI * 10) / 10;
+  return {
+    rateUsed: ird.rate, rateSource: ird.label, rateProvisional: ird.provisional,
+    reimbursement: Math.round(km * ird.rate * 100) / 100,
+    miles, irsRate: irs.rate, irsSource: irs.label, irsProvisional: irs.provisional,
+    reimbursementUSD: Math.round(miles * irs.rate * 100) / 100
+  };
+}
+function fmtUSD(n) { return 'US' + fmt(n); }
 
 // ═══════════════════════════════════════════════════════════
 //  STATE
@@ -1737,10 +1810,22 @@ function setDistanceBar(state, distText, statusText, reimbText, dim) {
   dv.textContent = distText;
   dv.className   = 'dist-value' + (dim ? ' dim' : '');
   if (reimbText !== undefined) {
-    rv.textContent = reimbText || fmt(currentDistKm * config.ratePerKm);
+    rv.textContent = reimbText;
     rv.className   = 'reimb-value' + (dim ? ' dim' : '');
   }
   st.textContent = statusText || '';
+  const usd = document.getElementById('reimb-usd');
+  if (usd) usd.textContent = '';
+}
+// Show NZ$ (IRD) and US$ (IRS) for the current distance and the trip date
+function showTripRates(prefix = '') {
+  if (currentDistKm <= 0) return;
+  const date = document.getElementById('mile-date').value || localISO();
+  const r = tripRates(currentDistKm, date);
+  const prov = (r.rateProvisional || r.irsProvisional) ? ' · provisional' : '';
+  setDistanceBar('ready', fmtKm(currentDistKm),
+    `${prefix}${r.miles.toFixed(1)} mi · ${r.rateSource} ${fmt(r.rateUsed)}/km${prov}`, fmt(r.reimbursement), false);
+  document.getElementById('reimb-usd').textContent = `${fmtUSD(r.reimbursementUSD)} · IRS ${(r.irsRate * 100).toFixed(1).replace(/\.0$/, '')}¢/mi`;
 }
 
 async function calcDistance() {
@@ -1771,8 +1856,7 @@ async function calcDistance() {
   }
 
   currentDistKm = Math.round(totalM / 100) / 10;
-  const reimb = currentDistKm * config.ratePerKm;
-  setDistanceBar('ready', fmtKm(currentDistKm), `${dests.length} stops · ${fmt(config.ratePerKm)}/km`, fmt(reimb), false);
+  showTripRates();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1792,13 +1876,19 @@ function saveMileage() {
 
   const isEdit   = !!editingEntryId;
   const existing = isEdit ? entries.find(x => x.id === editingEntryId) : null;
-  const rate     = existing?.rateUsed ?? config.ratePerKm; // editing keeps the rate the trip was logged at
+  const r = tripRates(currentDistKm, date);
+  // Editing an older trip on the same date keeps the NZ rate it was saved with
+  if (existing && existing.date === date && existing.rateUsed != null) {
+    r.rateUsed = existing.rateUsed;
+    r.rateSource = existing.rateSource || null;
+    r.rateProvisional = !!existing.rateProvisional;
+    r.reimbursement = Math.round(currentDistKm * existing.rateUsed * 100) / 100;
+  }
   const entry = {
     id: isEdit ? editingEntryId : uid(), type: 'mileage', date, purpose,
     stopIds: [...tripStops], route: stopNames,
     km: currentDistKm,
-    reimbursement: Math.round(currentDistKm * rate * 100) / 100,
-    rateUsed: rate,
+    ...r,
     notes: document.getElementById('mile-notes').value.trim(),
     createdAt: existing ? existing.createdAt : Date.now()
   };
@@ -2016,7 +2106,8 @@ function renderEntry(e) {
           <div class="entry-amount">${fmt(e.reimbursement)}</div>
         </div>
         <div class="entry-route">${esc(e.route || '')}</div>
-        <div class="entry-meta">${fmtKm(e.km)} · @${fmt(e.rateUsed||config.ratePerKm)}/km</div>
+        <div class="entry-meta">${fmtKm(e.km)} · ${fmt(e.rateUsed||config.ratePerKm)}/km${e.rateSource ? ' ' + esc(e.rateSource) : ''}${e.reimbursementUSD != null ? ' · ' + fmtUSD(e.reimbursementUSD) : ''}</div>
+        ${(e.rateProvisional || e.irsProvisional) ? '<div class="entry-receipt-badge prov">Provisional rate</div>' : ''}
         ${e.notes ? `<div class="entry-note">${esc(e.notes)}</div>` : ''}
         <div class="entry-actions"><button class="del-btn" onclick="event.stopPropagation();deleteEntry('${e.id}')">${icon('trash')}Delete</button></div>
       </div>
@@ -2091,7 +2182,8 @@ function editEntry(id) {
     tripStops = [...(e.stopIds || [])];
     currentDistKm = e.km || 0;
     renderRibbon();
-    setDistanceBar('ready', fmtKm(currentDistKm), `Editing — ${e.route || ''}`, fmt(e.reimbursement || 0), false);
+    setDistanceBar('ready', fmtKm(currentDistKm), `${e.rateSource || 'Saved rate'} ${fmt(e.rateUsed || 0)}/km${e.rateProvisional ? ' · provisional' : ''}`, fmt(e.reimbursement || 0), false);
+    if (e.reimbursementUSD != null) document.getElementById('reimb-usd').textContent = `${fmtUSD(e.reimbursementUSD)} · IRS ${(e.irsRate * 100).toFixed(1).replace(/\.0$/, '')}¢/mi`;
   } else if (e.type === 'expense') {
     setType('expense');
     document.getElementById('exp-date').value        = e.date || '';
@@ -2216,15 +2308,21 @@ function updateSummary() {
   const lbl = document.getElementById('export-label');
   if (!lbl.dataset.touched) lbl.value = periodRange(currentPeriod, sumOffset).label;
   const pe = periodEntries();
-  let km=0, mileReimb=0, expTotal=0, timeHours=0, timeEarnings=0;
+  let km=0, mileReimb=0, expTotal=0, timeHours=0, timeEarnings=0, mi=0, usd=0, noUsd=0;
   const catTotals = {};
   pe.forEach(e => {
-    if (e.type==='mileage') { km += e.km||0; mileReimb += e.reimbursement||0; }
+    if (e.type==='mileage') {
+      km += e.km||0; mileReimb += e.reimbursement||0;
+      if (e.reimbursementUSD != null) { mi += e.miles||0; usd += e.reimbursementUSD; } else noUsd++;
+    }
     else if (e.type==='expense') { expTotal += e.amount||0; catTotals[e.category] = (catTotals[e.category]||0)+e.amount; }
     else if (e.type==='time') { timeHours += calcTimeTotalHours(e); timeEarnings += calcTimeEarnings(e); }
   });
   document.getElementById('sum-miles').textContent = km.toFixed(1);
   document.getElementById('sum-mile-reimb').textContent = fmt(mileReimb);
+  document.getElementById('sum-mi').textContent = mi.toFixed(1);
+  document.getElementById('sum-usd').textContent = fmtUSD(usd);
+  document.getElementById('sum-usd-note').textContent = noUsd ? `${noUsd} older trip${noUsd > 1 ? 's' : ''} not included` : '';
   document.getElementById('sum-expense').textContent = fmt(expTotal);
   document.getElementById('sum-hours').textContent = timeHours.toFixed(2);
   document.getElementById('sum-earnings').textContent = fmt(timeEarnings);
@@ -2278,7 +2376,8 @@ function buildReport() {
       km += e.km || 0; mileReimb += e.reimbursement || 0;
       lines.push(`${e.date}  ${e.purpose}`);
       lines.push(`  Route: ${e.route}`);
-      lines.push(`  ${fmtKm(e.km)} × ${fmt(e.rateUsed||config.ratePerKm)}/km = ${fmt(e.reimbursement)}`);
+      lines.push(`  ${fmtKm(e.km)} × ${fmt(e.rateUsed||config.ratePerKm)}/km = ${fmt(e.reimbursement)}${e.rateSource ? ' (' + e.rateSource + (e.rateProvisional ? ', provisional' : '') + ')' : ''}`);
+      if (e.reimbursementUSD != null) lines.push(`  ${e.miles.toFixed(1)} mi × US$${e.irsRate}/mi = ${fmtUSD(e.reimbursementUSD)} (${e.irsSource})`);
       if (e.notes) lines.push(`  Note: ${e.notes}`);
       lines.push('');
     });
@@ -2345,10 +2444,11 @@ function csvEsc(v) {
 }
 function downloadCSV() {
   const pe = [...periodEntries()].sort((a, b) => a.date.localeCompare(b.date));
-  const rows = [['Date','Type','Description','Details','Hours','km','Rate','Amount','Notes']];
+  const rows = [['Date','Type','Description','Details','Hours','km','Rate','Amount','Notes','Rate source','Provisional','Miles','IRS rate (US$/mi)','IRS amount (US$)']];
   pe.forEach(e => {
     if (e.type === 'mileage') {
-      rows.push([e.date, 'Trip', e.purpose, e.route, '', (e.km||0).toFixed(1), (e.rateUsed||config.ratePerKm), (e.reimbursement||0).toFixed(2), e.notes]);
+      rows.push([e.date, 'Trip', e.purpose, e.route, '', (e.km||0).toFixed(1), (e.rateUsed||config.ratePerKm), (e.reimbursement||0).toFixed(2), e.notes,
+                 e.rateSource || 'Saved rate', e.rateProvisional ? 'yes' : '', e.miles ?? '', e.irsRate ?? '', e.reimbursementUSD != null ? e.reimbursementUSD.toFixed(2) : '']);
     } else if (e.type === 'expense') {
       rows.push([e.date, 'Expense', e.description, e.category, '', '', '', (e.amount||0).toFixed(2), e.notes]);
     } else if (e.type === 'time') {
@@ -2395,8 +2495,17 @@ function renderSettingsPage() {
   // Run migrations first
   migrateConfig();
 
-  const rateEl   = document.getElementById('setting-rate');
-  if (rateEl)   rateEl.value   = config.ratePerKm;
+  const vehEl = document.getElementById('setting-vehicle');
+  if (vehEl) {
+    vehEl.value = config.vehicleType || 'petrol';
+    const today = localISO(), ird = irdRateFor(today), irs = irsRateFor(today), iy = irdIncomeYear(today);
+    document.getElementById('rate-ird-now').textContent = `${fmt(ird.rate)}/km${ird.provisional ? ' (provisional)' : ''}`;
+    document.getElementById('rate-irs-now').textContent = `${(irs.rate * 100).toFixed(1).replace(/\.0$/, '')}¢/mi${irs.provisional ? ' (provisional)' : ''}`;
+    const ytd = entries.filter(e => e.type === 'mileage' && e.date >= iy.start && e.date <= iy.end).reduce((s, e) => s + (e.km || 0), 0);
+    const ytdEl = document.getElementById('rate-ytd');
+    ytdEl.textContent = `${Math.round(ytd).toLocaleString('en-NZ')} km of ${IRD_TIER1_KM.toLocaleString('en-NZ')} tier 1`;
+    ytdEl.style.color = ytd > IRD_TIER1_KM * 0.9 ? 'var(--red)' : '';
+  }
 
   // Business details
   const biz = config.bizDetails || {};
@@ -2486,12 +2595,11 @@ function renderSettingsPage() {
 }
 
 // Rate
-function saveRate() {
-  const r = parseFloat(document.getElementById('setting-rate').value);
-  if (isNaN(r) || r < 0) { showToast('Invalid rate', '⚠️'); return; }
-  config.ratePerKm = r;
+function saveVehicle() {
+  config.vehicleType = document.getElementById('setting-vehicle').value;
   saveConfig();
-  showToast(`Rate set to ${fmt(r)}/km`, '💰');
+  renderSettingsPage();
+  showToast(`Vehicle set to ${VEHICLE_TYPES[config.vehicleType]} — applies to new trips`);
 }
 
 // Purposes
