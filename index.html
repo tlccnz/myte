@@ -1620,7 +1620,7 @@ function setTodayDates() {
   document.getElementById('exp-date').value  = today;
 }
 function fmt(n)      { return '$' + parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
-function fmtKm(n)    { return parseFloat(n||0).toFixed(1) + ' km'; }
+function fmtKm(n)    { const v = parseFloat(n||0); return (Number.isInteger(v) ? v : v.toFixed(1)) + ' km'; }
 function uid()       { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 let toastTimer = null;
 function showToast(msg) {
@@ -1855,7 +1855,7 @@ async function calcDistance() {
     }
   }
 
-  currentDistKm = Math.round(totalM / 100) / 10;
+  currentDistKm = Math.ceil(totalM / 1000); // whole km, always rounded up
   showTripRates();
 }
 
@@ -3377,6 +3377,16 @@ function migrateEntries() {
   let changed = false;
   const lastDay = (y, m) => new Date(y, m + 1, 0).getDate();
   entries.forEach(e => {
+    // Trips are whole km, rounded up (e.g. 64.2 → 65). Keeps each trip's saved NZ rate; recomputes amounts.
+    if (e.type === 'mileage' && e.km % 1 !== 0) {
+      e.km = Math.ceil(e.km);
+      e.reimbursement = Math.round(e.km * (e.rateUsed ?? config.ratePerKm) * 100) / 100;
+      if (e.miles != null) {
+        e.miles = Math.round(e.km * KM_TO_MI * 10) / 10;
+        e.reimbursementUSD = Math.round(e.miles * e.irsRate * 100) / 100;
+      }
+      changed = true;
+    }
     if (e.type !== 'time') return;
     // 1. Freeze billing names/rates on older timesheets so later rate edits don't rewrite them
     if (!e.rates && e.hours) { snapshotTimeTypes(e); changed = true; }
