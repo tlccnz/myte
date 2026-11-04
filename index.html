@@ -1221,12 +1221,27 @@ const IRD_RATES = [
     petrol: [1.20, 0.37], diesel: [1.30, 0.38], hybrid: [0.90, 0.24], electric: [1.22, 0.23] },
 ];
 // IRS business standard mileage rate, US$ per mile, effective from date (can change mid-year).
-// Source: irs.gov newsroom (IR-2023-239, IR-2024-312, IR-2025-128, mid-year change 1 Jul 2026)
+// Source: irs.gov "Standard mileage rates" table (business use); IR number per row
 const IRS_RATES = [
+  { from: '2011-01-01', rate: 0.51,  label: 'IRS 2011 (Jan–Jun)' },     // IR-2010-119
+  { from: '2011-07-01', rate: 0.555, label: 'IRS 2011 (from 1 Jul)' },  // IR-2011-69
+  { from: '2012-01-01', rate: 0.555, label: 'IRS 2012' },               // IRB-2012-02
+  { from: '2013-01-01', rate: 0.565, label: 'IRS 2013' },               // IR-2012-95
+  { from: '2014-01-01', rate: 0.56,  label: 'IRS 2014' },               // IR-2013-95
+  { from: '2015-01-01', rate: 0.575, label: 'IRS 2015' },               // IR-2014-114
+  { from: '2016-01-01', rate: 0.54,  label: 'IRS 2016' },               // IR-2015-137
+  { from: '2017-01-01', rate: 0.535, label: 'IRS 2017' },               // IR-2016-169
+  { from: '2018-01-01', rate: 0.545, label: 'IRS 2018' },               // IR-2017-204
+  { from: '2019-01-01', rate: 0.58,  label: 'IRS 2019' },               // IR-2018-251
+  { from: '2020-01-01', rate: 0.575, label: 'IRS 2020' },               // IR-2019-215
+  { from: '2021-01-01', rate: 0.56,  label: 'IRS 2021' },               // IR-2020-279
+  { from: '2022-01-01', rate: 0.585, label: 'IRS 2022 (Jan–Jun)' },     // IR-2021-251
+  { from: '2022-07-01', rate: 0.625, label: 'IRS 2022 (from 1 Jul)' },  // IR-2022-124
+  { from: '2023-01-01', rate: 0.655, label: 'IRS 2023' },               // IR-2022-234
   { from: '2024-01-01', rate: 0.67,  label: 'IRS 2024' },
   { from: '2025-01-01', rate: 0.70,  label: 'IRS 2025' },
   { from: '2026-01-01', rate: 0.725, label: 'IRS 2026 (Jan–Jun)' },
-  { from: '2026-07-01', rate: 0.76,  label: 'IRS 2026 (from 1 Jul)' },
+  { from: '2026-07-01', rate: 0.76,  label: 'IRS 2026 (from 1 Jul)' },  // IR-2026-29
 ];
 const KM_TO_MI = 0.621371;
 const VEHICLE_TYPES = { petrol: 'Petrol', diesel: 'Diesel', hybrid: 'Petrol hybrid', electric: 'Electric' };
@@ -1257,15 +1272,17 @@ function irdIncomeYear(date) {
 // Both amounts for a trip of km on date
 function tripRates(km, date) {
   const ird = irdRateFor(date), irs = irsRateFor(date);
-  const miles = Math.round(km * KM_TO_MI * 10) / 10;
+  const miles = Math.ceil(Math.round(km * KM_TO_MI * 1e6) / 1e6); // whole miles, rounded up (same as km)
   return {
     rateUsed: ird.rate, rateSource: ird.label, rateProvisional: ird.provisional,
-    reimbursement: Math.round(km * ird.rate * 100) / 100,
+    reimbursement: cents(km * ird.rate),
     miles, irsRate: irs.rate, irsSource: irs.label, irsProvisional: irs.provisional,
-    reimbursementUSD: Math.round(miles * irs.rate * 100) / 100
+    reimbursementUSD: cents(miles * irs.rate)
   };
 }
 function fmtUSD(n) { return 'US' + fmt(n); }
+// Round money to cents, half up, without float error (3 × 0.725 = 2.1749999… → 2.18)
+function cents(n) { return Math.round(Number((n * 100).toFixed(6))) / 100; }
 
 // ═══════════════════════════════════════════════════════════
 //  STATE
@@ -1824,7 +1841,7 @@ function showTripRates(prefix = '') {
   const r = tripRates(currentDistKm, date);
   const prov = (r.rateProvisional || r.irsProvisional) ? ' · provisional' : '';
   setDistanceBar('ready', fmtKm(currentDistKm),
-    `${prefix}${r.miles.toFixed(1)} mi · ${r.rateSource} ${fmt(r.rateUsed)}/km${prov}`, fmt(r.reimbursement), false);
+    `${prefix}${r.miles} mi · ${r.rateSource} ${fmt(r.rateUsed)}/km${prov}`, fmt(r.reimbursement), false);
   document.getElementById('reimb-usd').textContent = `${fmtUSD(r.reimbursementUSD)} · IRS ${(r.irsRate * 100).toFixed(1).replace(/\.0$/, '')}¢/mi`;
 }
 
@@ -1882,7 +1899,7 @@ function saveMileage() {
     r.rateUsed = existing.rateUsed;
     r.rateSource = existing.rateSource || null;
     r.rateProvisional = !!existing.rateProvisional;
-    r.reimbursement = Math.round(currentDistKm * existing.rateUsed * 100) / 100;
+    r.reimbursement = cents(currentDistKm * existing.rateUsed);
   }
   const entry = {
     id: isEdit ? editingEntryId : uid(), type: 'mileage', date, purpose,
@@ -2318,9 +2335,9 @@ function updateSummary() {
     else if (e.type==='expense') { expTotal += e.amount||0; catTotals[e.category] = (catTotals[e.category]||0)+e.amount; }
     else if (e.type==='time') { timeHours += calcTimeTotalHours(e); timeEarnings += calcTimeEarnings(e); }
   });
-  document.getElementById('sum-miles').textContent = km.toFixed(1);
+  document.getElementById('sum-miles').textContent = Number.isInteger(km) ? km : km.toFixed(1);
   document.getElementById('sum-mile-reimb').textContent = fmt(mileReimb);
-  document.getElementById('sum-mi').textContent = mi.toFixed(1);
+  document.getElementById('sum-mi').textContent = mi;
   document.getElementById('sum-usd').textContent = fmtUSD(usd);
   document.getElementById('sum-usd-note').textContent = noUsd ? `${noUsd} older trip${noUsd > 1 ? 's' : ''} not included` : '';
   document.getElementById('sum-expense').textContent = fmt(expTotal);
@@ -2377,7 +2394,7 @@ function buildReport() {
       lines.push(`${e.date}  ${e.purpose}`);
       lines.push(`  Route: ${e.route}`);
       lines.push(`  ${fmtKm(e.km)} × ${fmt(e.rateUsed||config.ratePerKm)}/km = ${fmt(e.reimbursement)}${e.rateSource ? ' (' + e.rateSource + (e.rateProvisional ? ', provisional' : '') + ')' : ''}`);
-      if (e.reimbursementUSD != null) lines.push(`  ${e.miles.toFixed(1)} mi × US$${e.irsRate}/mi = ${fmtUSD(e.reimbursementUSD)} (${e.irsSource})`);
+      if (e.reimbursementUSD != null) lines.push(`  ${e.miles} mi × US$${e.irsRate}/mi = ${fmtUSD(e.reimbursementUSD)} (${e.irsSource})`);
       if (e.notes) lines.push(`  Note: ${e.notes}`);
       lines.push('');
     });
@@ -3380,12 +3397,24 @@ function migrateEntries() {
     // Trips are whole km, rounded up (e.g. 64.2 → 65). Keeps each trip's saved NZ rate; recomputes amounts.
     if (e.type === 'mileage' && e.km % 1 !== 0) {
       e.km = Math.ceil(e.km);
-      e.reimbursement = Math.round(e.km * (e.rateUsed ?? config.ratePerKm) * 100) / 100;
-      if (e.miles != null) {
-        e.miles = Math.round(e.km * KM_TO_MI * 10) / 10;
-        e.reimbursementUSD = Math.round(e.miles * e.irsRate * 100) / 100;
-      }
+      e.reimbursement = cents(e.km * (e.rateUsed ?? config.ratePerKm));
       changed = true;
+    }
+    // Miles are whole numbers too, rounded up from the (whole) km; recompute US$ at the trip's IRS rate
+    if (e.type === 'mileage' && e.miles != null && e.irsRate != null) {
+      const mi = Math.ceil(Math.round(e.km * KM_TO_MI * 1e6) / 1e6);
+      if (e.miles !== mi) {
+        e.miles = mi;
+        e.reimbursementUSD = cents(mi * e.irsRate);
+        changed = true;
+      }
+    }
+    // Date-based rates: older flat-rate trips (no rateSource) and provisional trips are recalculated
+    // from the rate tables. When new IRD/IRS rates are added, provisional trips update themselves.
+    if (e.type === 'mileage' && e.date && e.km && (!e.rateSource || e.rateProvisional || e.irsProvisional)) {
+      const r = tripRates(e.km, e.date);
+      const keys = ['rateUsed','rateSource','rateProvisional','reimbursement','miles','irsRate','irsSource','irsProvisional','reimbursementUSD'];
+      if (keys.some(k => e[k] !== r[k])) { keys.forEach(k => { e[k] = r[k]; }); changed = true; }
     }
     if (e.type !== 'time') return;
     // 1. Freeze billing names/rates on older timesheets so later rate edits don't rewrite them

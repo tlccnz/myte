@@ -162,7 +162,11 @@ invoiceDefaults: { incTime, incMileage, incExpenses }   // all bool
 - `IRD_RATES` / `IRS_RATES` tables near the top of the script; `tripRates(km, date)` returns both amounts.
 - Trips store: `rateUsed`, `rateSource`, `rateProvisional`, `reimbursement` (NZ$, IRD) and `miles`, `irsRate`, `irsSource`, `irsProvisional`, `reimbursementUSD` (IRS).
 - IRD publishes rates after the income year (1 Apr–31 Mar) ends, usually around June: add a row to `IRD_RATES`. IRS announces in December and sometimes mid-year: add a row with its `from` date.
-- Trips after the last published IRD year use the latest rates and are flagged provisional. Recalculating provisional and legacy trips (saved before date-based rates, with no `rateSource`) is still to be decided.
+- Trips after the last published IRD year use the latest rates and are flagged provisional.
+- `migrateEntries()` on load: rounds trip km up to whole km, then recalculates any trip with no `rateSource` (old flat $1.17 trips) or a provisional rate from the tables. So adding a new IRD/IRS row automatically updates the provisional trips it covers, then uploads them to KV.
+- Distances: km = ceil(total metres / 1000); miles = ceil(km × 0.621371). Both are whole numbers; migration fixes stored trips.
+- Money: use `cents(n)` for mileage amounts (half-up rounding without float error).
+- `IRS_RATES` has the business rates back to 2011, from the irs.gov "Standard mileage rates" table.
 - `config.vehicleType` (petrol/diesel/hybrid/electric) picks the IRD column; `config.ratePerKm` is legacy only.
 
 ### Not done yet (ideas)
